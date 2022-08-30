@@ -15,6 +15,4 @@ A simple Flask webserver that displays "Hello World from Frontrow!" runs on a Vi
 - Deploy this application through [AWS Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/) to see "Hello World from Frontrow!" on a public URL
 - Configure the repo to automatically trigger deploys on Github merge
 - Basic Documentation (README.md) and architecture diagram
-
-## Bonus:
 - Utilizing AWS Lambda, create a lambda function using [Serverless](https://www.serverless.com/) that listens for requests to the "/quotes" endpoint and serves results via the browser or CURL
