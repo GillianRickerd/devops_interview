@@ -16,3 +16,68 @@ A simple Flask webserver that displays "Hello World from Frontrow!" runs on a Vi
 - Configure the repo to automatically trigger deploys on Github merge
 - Basic Documentation (README.md) and architecture diagram
 - Utilizing AWS Lambda, create a lambda function using [Serverless](https://www.serverless.com/) that listens for requests to the "/quotes" endpoint and serves results via the browser or CURL
+
+
+# README
+
+Application is deployed in 2 ways, both of which are done automatically through CircleCI
+
+![Architecture diagram](/architecture-diagram.png)
+
+## CircleCI
+There is currently one workflow for one environment
+
+**TODO:** add additional workflows for other test and deploy scenarios
+
+e.g. PRs should have a workflow to run tests, validate terraform, etc. but not deploy
+
+e.g. dedicated dev or staging branches should have a workflow to run all steps but deployment should be to the corresponding dev or staging AWS environments
+
+*main branch should be protected, i.e. only approved PRs with passing pipelines can be merged and there’s limited user access
+
+**TODO:** add serverless config validation here (the config is setup so `sls wsgi serve` fails and deploy will fail if there are errors but it’d be nice to know before the pipeline gets to the deploy step)
+
+### Current workflow
+#### Install
+
+Installs dependencies for python application and serverless framework
+#### Test
+
+Runs tests; currently this is linting for python code and terraform
+
+**TODO:** add python test step here when there are python tests
+
+#### Deploy
+1. Deploys the application using serverless framework to AWS Lambda
+2. Deploys the application using terraform to Elastic Beanstalk
+
+
+## Serverless framework
+This automatically creates the AWS Lambda and corresponding API Gateway given the configurations. Configurations live in `./webserver/serverless.yml`
+
+### Running locally
+`serverless wsgi serve` — runs application with serverless locally (AWS not needed for this)
+
+`serverless deploy` — deploys application from your local environment to the configured AWS account
+
+
+### Terraform
+Terraform creates all of the necessary infrastructure for the Elastic Beanstalk version of the app. Configuration files live in `./terraform`
+
+Run the following to verify changes, fix formatting, and deploy changes.
+
+`terraform init` — initializes backend, installs providers, etc.
+
+`terraform validate` - confirms the terraform configurations are corrrect without accessing any remove services (state, APIs, etc.)
+
+`terraform fmt` — auto formats terraform files
+
+`terraform plan` — shows output of what will be changed on the apply step; *always run this to make sure there are no conflicts with the state, errors in the changes, etc.*
+
+`terraform apply` — pushes changes to AWS
+
+
+## AWS setup
+Keys for the IAM user need to be set in environment variables in CI (and locally if doing any deploys from local machine)
+
+**TODO:** update the IAM user to have only the bare necessities for permissions instead of admin access

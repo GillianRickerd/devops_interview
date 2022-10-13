@@ -1,0 +1,8 @@
+[flake8]
+exclude =
+    __pycache__
+    .serverless
+    node_modules
+    venv
+    .env
+ignore = E501

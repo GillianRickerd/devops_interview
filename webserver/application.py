@@ -15,15 +15,18 @@ quotes = [
           "Edsger W. Dijkstra")
 ]
 
-app = Flask(__name__)
+application = Flask(__name__)
 
-@app.route('/hello')
+
+@application.route('/hello')
 def helloIndex():
     return 'Hello World from Frontrow!'
 
 
-@app.route("/quote", methods=["GET"])
+@application.route("/quote", methods=["GET"])
 def get_random_quote():
     return jsonify(choice(quotes)._asdict())
 
-app.run(host='0.0.0.0', port= 80)
+
+if __name__ == '__main__':
+    application.run()

@@ -1,0 +1,6 @@
+webserver/__pycache__/
+webserver/.serverless
+webserver/node_modules
+webserver/venv
+terraform/.terraform
+terraform/.terraform.lock.hcl

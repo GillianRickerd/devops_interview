@@ -1,19 +1,110 @@
 # You're free to change the jobs and the workflow logic as needed.
 # Doc: https://circleci.com/docs/2.0/getting-started/#running-your-first-circleci-build
 version: 2.1
+orbs:
+  terraform: circleci/terraform@3.1
 jobs:
   install:
+    working_directory: ~/devops_interview/webserver
+    docker:
+      - image: nikolaik/python-nodejs:python3.8-nodejs18-alpine
+    steps:
+      - checkout:
+          path: ~/devops_interview
+      - run:
+          name: Create virtualenv
+          command: |
+            python3 -m venv venv
+            source venv/bin/activate
+      - run:
+          name: Install serverless
+          command: |
+            npm install -g serverless
+            sls plugin install -n serverless-wsgi
+            sls plugin install -n serverless-python-requirements
+      - run:
+          name: Install python dependencies
+          command: |
+            source venv/bin/activate
+            pip install -r requirements.txt
+      - persist_to_workspace:
+          root: ~/devops_interview
+          paths:
+            - .
   test:
+    working_directory: ~/devops_interview
+    docker:
+      - image: nikolaik/python-nodejs:python3.8-nodejs18-alpine
+    steps:
+      - attach_workspace:
+          at: ~/devops_interview
+      - run:
+          name: Fetch terraform
+          command: |
+            apk add terraform --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+      - terraform/init:
+          path: ./terraform
+          backend: true
+          backend_config_file: dev-backend.tfvars
+      - terraform/validate:
+          path: ./terraform
+      - terraform/fmt:
+          path: ./terraform
+      - terraform/plan:
+          path: ./terraform
+          var_file: dev.tfvars
+      - run:
+          name: Python linting
+          command: |
+            cd webserver
+            source venv/bin/activate
+            python3 -m flake8
+
   deploy:
+    working_directory: ~/devops_interview
+    docker:
+      - image: nikolaik/python-nodejs:python3.8-nodejs18
+    steps:
+      - attach_workspace:
+          at: ~/devops_interview
+      - run:
+          name: Fetch terraform
+          command: |
+            cd /tmp
+            wget https://releases.hashicorp.com/terraform/1.3.2/terraform_1.3.2_linux_amd64.zip
+            unzip terraform_1.3.2_linux_amd64.zip
+            mv terraform /usr/local/bin/
+            cd ~/devops_interview
+      - terraform/init:
+          path: ./terraform
+          backend: true
+          backend_config_file: dev-backend.tfvars
+      - terraform/apply:
+          path: ./terraform
+          var_file: dev.tfvars
+      - run:
+          name: Deploy Elastic Beanstalk
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            ./aws/install
+            cd terraform
+            terraform init -backend-config="dev-backend.tfvars"
+            AWS_PAGER="" aws elasticbeanstalk update-environment --region us-east-1 --environment-name $(terraform output --raw env_name) --version-label $(terraform output --raw app_version)
+      - run:
+          name: Deploy serverless application
+          command: |
+            cd webserver
+            ./node_modules/.bin/sls deploy
 
 workflows:
- version: 2
- deploy-server:
-   jobs:
-     - install
-     - test:
-         requires:
-           - install
-     - deploy:
-         requires:
-           - deploy
+  version: 2
+  deploy-server:
+    jobs:
+      - install
+      - test:
+          requires:
+            - install
+      - deploy:
+          requires:
+            - test
