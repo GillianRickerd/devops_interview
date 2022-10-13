@@ -20,6 +20,9 @@ A simple Flask webserver that displays "Hello World from Frontrow!" runs on a Vi
 
 # README
 
+![GillianRickerd](https://circleci.com/gh/GillianRickerd/devops_interview.svg?style=svg)
+
+
 Application is deployed in 2 ways, both of which are done automatically through CircleCI
 
 ![Architecture diagram](/architecture-diagram.png)
@@ -27,15 +30,7 @@ Application is deployed in 2 ways, both of which are done automatically through 
 ## CircleCI
 There is currently one workflow for one environment
 
-**TODO:** add additional workflows for other test and deploy scenarios
-
-e.g. PRs should have a workflow to run tests, validate terraform, etc. but not deploy
-
-e.g. dedicated dev or staging branches should have a workflow to run all steps but deployment should be to the corresponding dev or staging AWS environments
-
-*main branch should be protected, i.e. only approved PRs with passing pipelines can be merged and there’s limited user access
-
-**TODO:** add serverless config validation here (the config is setup so `sls wsgi serve` fails and deploy will fail if there are errors but it’d be nice to know before the pipeline gets to the deploy step)
+Tests will run on any branch, the deploy step will only run on `main`
 
 ### Current workflow
 #### Install
@@ -45,7 +40,9 @@ Installs dependencies for python application and serverless framework
 
 Runs tests; currently this is linting for python code and terraform
 
-**TODO:** add python test step here when there are python tests
+**TODO:** add python test step here when there are python unit tests
+
+**TODO:** add serverless config validation here (the config is setup so `sls wsgi serve` fails and deploy will fail if there are errors but it’d be nice to know before the pipeline gets to the deploy step)
 
 #### Deploy
 1. Deploys the application using serverless framework to AWS Lambda
